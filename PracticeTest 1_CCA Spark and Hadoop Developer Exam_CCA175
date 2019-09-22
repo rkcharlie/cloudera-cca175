@@ -1,0 +1,486 @@
+Question 1:
+Problem Scenario: 
+
+You have been given following mysql database details as well as other info.
+
+user=retail_dba
+password=cloudera
+database=retail_db
+jdbc URL = jdbc:mysql://quickstart:3306/retail_db
+Please accomplish following.
+1. Import departments table in a directory called departments.
+2. Once import is done, please insert following 5 records in departments mysql table.
+Insert into departments(10, physics);
+Insert into departments(11, Chemistry);
+Insert into departments(12, Maths);
+Insert into departments(13, Science);
+Insert into departments(14, Engineering);
+3. Now import only new inserted records and append to existing directory . which has been created in first step.
+
+Solution:
+
+Step 1 : Clean already imported data. (In real exam, please make sure you dont delete data generated from previous exercise).
+hadoop fs -rm -R departments
+Step 2 : Import data in departments directory.
+sqoop import \
+--connect jdbc:mysql://quickstart:3306/retail_db \
+--username=retail_dba \
+-password=cloudera \
+-table departments \
+"target-dir/user/cloudera/departments
+Step 3 : Insert the five records in departments table.
+mysql -user=retail_dba --password=cloudera retail_db
+Insert into departments values(10, "physics"); Insert into departments values(11,
+"Chemistry"); Insert into departments values(12, "Maths"); Insert into departments values(13, "Science"); Insert into departments values(14, "Engineering"); commit; select' from departments;
+Step 4 : Get the maximum value of departments from last import, hdfs dfs -cat
+/user/cloudera/departments/part* that should be 7
+Step 5 : Do the incremental import based on last import and append the results.
+sqoop import \
+--connect "jdbc:mysql://quickstart.cloudera:330G/retail_db" \
+~ username=retail_dba \
+-password=cloudera \
+-table departments \
+--target-dir /user/cloudera/departments \
+-append \
+-check-column "department_id" \
+-incremental append \
+-last-value 7
+Step 6 : Now check the result.
+hdfs dfs -cat /user/cloudera/departments/part"
+
+
+Question 2:
+Problem Scenario: 
+
+You have been given below three files
+
+product.csv (Create this file in hdfs)
+productID,productCode,name,quantity,price,supplierid
+1 001,PEN,Pen Red,5000,1.23,501
+1 002,PEN,Pen Blue,8000,1.25,501
+1003,PEN,Pen Black,2000,1.25,501
+1004,PEC,Pencil 2B,10000,0.48,502
+1005,PEC,Pencil 2H,8000,0.49,502
+1006,PEC,Pencil HB,0,9999.99,502
+2001,PEC,Pencil 3B,500,0.52,501
+2002,PEC,Pencil 4B,200,0.62,501
+2003,PEC,Pencil 5B,100,0.73,501
+2004,PEC,Pencil 6B,500,0.47,502
+supplier.csv
+supplierid,name,phone
+501,ABC Traders,88881111
+502,XYZ Company,88882222
+503,QQ Corp,88883333
+products_suppliers.csv
+productID,supplierID
+2001,501
+2002,501
+2003,501
+2004,502
+2001,503
+Now accomplish all the queries given in solution.
+Select product, its price , its supplier name where product price is less than 0.6 using
+SparkSQL
+
+Solution:
+
+Step 1:
+hdfs dfs -mkdir sparksql2
+hdfs dfs -put product.csv sparksq!2/
+hdfs dfs -put supplier.csv sparksql2/
+hdfs dfs -put products_suppliers.csv sparksql2/
+Step 2 : Now in spark shell
+// this Is used to Implicitly convert an RDD to a DataFrame.
+import sqlContext.impIicits._
+// Import Spark SQL data types and Row.
+import org.apache.spark.sql._
+// load the data into a new RDD
+val products = sc.textFile("sparksql2/product.csv")
+val supplier = sc.textFileC'sparksq^supplier.csv")
+val prdsup = sc.textFile("sparksql2/products_suppliers.csv"}
+// Return the first element in this RDD
+products.fi rst()
+supplier.first{).
+prdsup.first()
+//define the schema using a case class
+case class Product(productid: Integer, code: String, name: String, quantity:lnteger, price:
+Float, supplierid:lnteger)
+case class Suplier(supplierid: Integer, name: String, phone: String)
+case class PRDSUP(productid: Integer.supplierid: Integer)
+// create an RDD of Product objects
+val prdRDD = products.map(_.split('\")).map(p =>
+Product(p(0).tolnt,p(1),p(2),p(3).tolnt,p(4).toFloat,p(5).toint))
+val supRDD = supplier.map(_.split(",")).map(p => Suplier(p(0).tolnt,p(1),p(2))) val prdsupRDD = prdsup.map(_.split(",")).map(p => PRDSUP(p(0).tolnt,p(1}.tolnt}} prdRDD.first() prdRDD.count() supRDD.first() supRDD.count()
+prdsupRDD.first() prdsupRDD.count(}
+// change RDD of Product objects to a DataFrame
+val prdDF = prdRDD.toDF()
+val supDF = supRDD.toDF()
+val prdsupDF = prdsupRDD.toDF()
+// register the DataFrame as a temp table prdDF.registerTempTablef'products") supDF.registerTempTablef'suppliers") prdsupDF.registerTempTablef'productssuppliers"}
+//Select product, its price , its supplier name where product price is less than 0.6 val results = sqlContext.sql(......SELECT products.name, price, suppliers.name as sup_name FROM products JOIN suppliers ON products.supplierlD= suppliers.supplierlD
+WHERE price < 0.6......]
+results. show()
+
+
+Question 3:
+Problem Scenario: 
+
+You have been given below code snippet.
+
+val a = sc.parallelize(List("dog", "tiger", "lion", "cat", "spider", "eagle"), 2) val b = a.keyBy(_.length) operation1
+Write a correct code snippet for operationl which will produce desired output, shown below.
+Array[(lnt, Seq[String])] = Array((4,ArrayBuffer(lion)), (6,ArrayBuffer(spider)),
+(3,ArrayBuffer(dog, cat)), (5,ArrayBuffer(tiger, eagle}}}
+
+Solution:
+
+b.groupByKey.collect
+groupByKey [Pair]
+Very similar to groupBy, but instead of supplying a function, the key-component of each pair will automatically be presented to the partitioner.
+Listing Variants
+def groupByKeyQ: RDD[(K, lterable[V]}]
+def groupByKey(numPartittons: Int): RDD[(K, lterable[V] )]
+def groupByKey(partitioner: Partitioner): RDD[(K, lterable[V])]
+
+
+Question 4:
+Problem Scenario: 
+
+You need to implement near real time solutions for collecting information when submitted in file with below
+
+Data
+echo "IBM,100,20160104" >> /tmp/spooldir2/.bb.txt
+echo "IBM,103,20160105" >> /tmp/spooldir2/.bb.txt
+mv /tmp/spooldir2/.bb.txt /tmp/spooldir2/bb.txt
+After few mins
+echo "IBM,100.2,20160104" >> /tmp/spooldir2/.dr.txt
+echo "IBM,103.1,20160105" >> /tmp/spooldir2/.dr.txt
+mv /tmp/spooldir2/.dr.txt /tmp/spooldir2/dr.txt
+You have been given below directory location (if not available than create it) /tmp/spooldir2
+.
+As soon as file committed in this directory that needs to be available in hdfs in
+/tmp/flume/primary as well as /tmp/flume/secondary location.
+However, note that/tmp/flume/secondary is optional, if transaction failed which writes in this directory need not to be rollback.
+Write a flume configuration file named flumeS.conf and use it to load data in hdfs with following additional properties .
+1 . Spool /tmp/spooldir2 directory
+2 . File prefix in hdfs sholuld be events
+3 . File suffix should be .log
+4 . If file is not committed and in use than it should have _ as prefix.
+5 . Data should be written as text to hdfs
+
+Solution:
+
+Step 1 : Create directory mkdir /tmp/spooldir2
+Step 2 : Create flume configuration file, with below configuration for source, sink and channel and save it in flume8.conf.
+agent1 .sources = source1
+agent1.sinks = sink1a sink1bagent1.channels = channel1a channel1b
+agent1.sources.source1.channels = channel1a channel1b
+agent1.sources.source1.selector.type = replicating
+agent1.sources.source1.selector.optional = channel1b
+agent1.sinks.sink1a.channel = channel1a
+agent1 .sinks.sink1b.channel = channel1b
+agent1.sources.source1.type = spooldir
+agent1 .sources.sourcel.spoolDir = /tmp/spooldir2
+agent1.sinks.sink1a.type = hdfs
+agent1 .sinks, sink1a.hdfs. path = /tmp/flume/primary
+agent1 .sinks.sink1a.hdfs.tilePrefix = events
+agent1 .sinks.sink1a.hdfs.fileSuffix = .log
+agent1 .sinks.sink1a.hdfs.fileType = Data Stream
+agent1 .sinks.sink1b.type = hdfs
+agent1 .sinks.sink1b.hdfs.path = /tmp/flume/secondary
+agent1 .sinks.sink1b.hdfs.filePrefix = events
+agent1.sinks.sink1b.hdfs.fileSuffix = .log
+agent1 .sinks.sink1b.hdfs.fileType = Data Stream
+agent1.channels.channel1a.type = file
+agent1.channels.channel1b.type = memory
+step 4 : Run below command which will use this configuration file and append data in hdfs.
+Start flume service:
+flume-ng agent -conf /home/cloudera/flumeconf -conf-file
+/home/cloudera/flumeconf/flume8.conf --name age
+Step 5 : Open another terminal and create a file in /tmp/spooldir2/
+echo "IBM,100,20160104" > /tmp/spooldir2/.bb.txt
+echo "IBM,103,20160105" > /tmp/spooldir2/.bb.txt mv /tmp/spooldir2/.bb.txt
+/tmp/spooldir2/bb.txt
+After few mins
+echo "IBM.100.2,20160104" >/tmp/spooldir2/.dr.txt
+echo "IBM,103.1,20160105" > /tmp/spooldir2/.dr.txt mv /tmp/spooldir2/.dr.txt
+/tmp/spooldir2/dr.txt
+
+
+Question 5:
+Problem Scenario: 
+
+You have been given below code snippet.
+
+val a = sc.parallelize(l to 100. 3)
+operation1
+Write a correct code snippet for operationl which will produce desired output, shown below.
+Array [Array [I nt]] = Array(Array(1, 2, 3,4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19, 20,
+21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33),
+Array(34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55,
+5 6, 57, 58, 59, 60, 61, 62, 63, 64, 65, 66),
+Array(67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88,
+8 9, 90, 91, 92, 93, 94, 95, 96, 97, 98, 99, 100))
+
+Solution: 
+
+a.glom.collect
+glom
+Assembles an array that contains all elements of the partition and embeds it in an RDD.
+Each returned array contains the contents of one panition
+
+
+
+Question 6:
+Problem Scenario: 
+
+You have been given below code snippet.
+
+val a = sc.parallelize(1 to 10, 3)
+operation1
+b.collect
+Output 1
+Array[lnt] = Array(2, 4, 6, 8,10)
+operation2
+Output 2
+Array[lnt] = Array(1,2, 3)
+Write a correct code snippet for operation1 and operation2 which will produce desired output, shown above.
+
+Solution:
+valb = a.filter(_%2==0)
+a.filter(_ < 4).collect
+filter
+Evaluates a boolean function for each data item of the RDD and puts the items for which the function returned true into the resulting RDD.
+When you provide a filter function, it must be able to handle all data items contained in the
+RDD. Scala provides so-called partial functions to deal with mixed data types (Tip: Partial functions to deal are very useful if you have some data which may be bad and you do not want to handle but for the good data (matching data) you want to apply some Kind of map function. The following article is good. It teaches you about partial functions in a very nice way and explains why case has to be used for partial functions:article)
+Examples for mixed data without partial functions
+val b = sc.parallelize(1 to 8)
+b.filter(_ < 4)xollect
+res15: Arrayjlnt] = Array(1, 2, 3)
+val a = sc.parallelize(List("cat'\ "horse", 4.0, 3.5, 2, "dog"))
+a.filter(_<4).collect
+error: value < is not a member of Any
+
+
+Question 7:
+Problem Scenario: 
+
+You have been given following mysql database details.
+
+user=retail_dba
+password=cloudera
+database=retail_db
+jdbc URL = jdbc:mysql://quickstart:3306/retail_db
+Please accomplish following activities.
+1. List all the tables using sqoop command from retail_db
+2. Write simple sqoop eval command to check whether you have permission to read database tables or not.
+3 . Import all the tables as avro files in /user/hive/warehouse/retail cca174.db
+4 . Import departments table as a text file in /user/cloudera/departments.
+
+Solution:
+Step 1 : List tables using sqoop
+sqoop list-tables --connect jdbc:mysql://quickstart:330G/retail_db --username retail dba - password cloudera
+Step 2 : Eval command, just run a count query on one of the table.
+sqoop eval \
+--connect jdbc:mysql://quickstart:3306/retail_db \
+-username retail_dba \
+-password cloudera \
+--query "select count(1) from ordeMtems"
+Step 3 : Import all the tables as avro file.
+sqoop import-all-tables \
+-connect jdbc:mysql://quickstart:3306/retail_db \
+-username=retail_dba \
+-password=cloudera \
+-as-avrodatafile \
+-warehouse-dir=/user/hive/warehouse/retail stage.db \
+-ml
+Step 4 : Import departments table as a text file in /user/cloudera/departments sqoop import \
+-connect jdbc:mysql://quickstart:3306/retail_db \
+-username=retail_dba \
+-password=cloudera \
+-table departments \
+-as-textfile \
+-target-dir=/user/cloudera/departments
+Step 5 : Verify the imported data.
+hdfs dfs -Is /user/cloudera/departments
+hdfs dfs -Is /user/hive/warehouse/retailstage.db
+hdfs dfs -Is /user/hive/warehouse/retail_stage.db/products
+
+
+Question 8:
+Problem Scenario: 
+
+You have been given following mysql database details as well as other info.
+
+user=retail_dba
+password=cloudera
+database=retail_db
+jdbc URL = jdbc:mysql://quickstart:3306/retail_db
+Please accomplish below assignment.
+1. Create a table in hive as below.
+create table departments_hive(department_id int, department_name string);
+2. Now import data from mysql table departments to this hive table. Please make sure that data should be visible using below hive command, select" from departments_hive
+
+Solution:
+Step 1 : Create hive table as said.
+hive
+show tables;
+create table departments_hive(department_id int, department_name string);
+Step 2 : The important here is, when we create a table without delimiter fields. Then default delimiter for hive is ^A (\001). Hence, while importing data we have to provide proper delimiter.
+sqoop import \
+-connect jdbc:mysql://quickstart:3306/retail_db \
+~ username=retail_dba \
+-password=cloudera \
+--table departments \
+--hive-home /user/hive/warehouse \
+-hive-import \
+-hive-overwrite \
+--hive-table departments_hive \
+--fields-terminated-by '\001'
+Step 3 : Check-the data in directory.
+hdfs dfs -Is /user/hive/warehouse/departments_hive
+hdfs dfs -cat/user/hive/warehouse/departmentshive/part'
+Check data in hive table.
+Select * from departments_hive;
+
+
+
+Question 9:
+Problem Scenario: 
+
+You have been given below code snippet.
+val aul = sc.parallelize(List (("a" , Array(1,2)), ("b" , Array(1,2)))) val au2 = sc.parallelize(List (("a" , Array(3)), ("b" , Array(2))))
+Apply the Spark method, which will generate below output.
+Array[(String, Array[lnt])] = Array((a,Array(1, 2)), (b,Array(1, 2)), (a(Array(3)), (b,Array(2)))
+
+Solution:
+
+au1.union(au2)
+
+
+Question 10:
+Problem Scenario: 
+
+You have been given following mysql database details as well as other info.
+
+user=retail_dba
+password=cloudera
+database=retail_db
+jdbc URL = jdbc:mysql://quickstart:3306/retail_db
+Please accomplish following activities.
+1. In mysql departments table please insert following record. Insert into departments values(9999, '"Data Science"1);
+2. Now there is a downstream system which will process dumps of this file. However, system is designed the way that it can process only files if fields are enlcosed in(') single quote and separate of the field should be (-} and line needs to be terminated by : (colon).
+3. If data itself contains the " (double quote } than it should be escaped by \.
+4. Please import the departments table in a directory called departments_enclosedby and file should be able to process by downstream system.
+
+Solution:
+
+Step 1 : Connect to mysql database.
+mysql --user=retail_dba -password=cloudera
+show databases; use retail_db; show tables;
+Insert record
+Insert into departments values(9999, '"Data Science"');
+select" from departments;
+Step 2 : Import data as per requirement.
+sqoop import \
+-connect jdbc:mysql;//quickstart:3306/retail_db \
+~ username=retail_dba \
+--password=cloudera \
+-table departments \
+-target-dir /user/cloudera/departments_enclosedby \
+-enclosed-by V -escaped-by \\ -fields-terminated-by--' -lines-terminated-by :
+Step 3 : Check the result.
+hdfs dfs -cat/user/cloudera/departments_enclosedby/part"
+
+
+
+Question 11:
+Problem Scenario: 
+
+You have been given three csv files in hdfs as below.
+
+EmployeeName.csv with the field (id, name)
+EmployeeManager.csv (id, manager Name)
+EmployeeSalary.csv (id, Salary)
+Using Spark and its API you have to generate a joined output as below and save as a text tile (Separated by comma) for final distribution and output must be sorted by id.
+ld,name,salary,managerName
+EmployeeManager.csv
+E01,Vishnu
+E02,Satyam
+E03,Shiv
+E04,Sundar
+E05,John
+E06,Pallavi
+E07,Tanvir
+E08,Shekhar
+E09,Vinod
+E10,Jitendra
+EmployeeName.csv
+E01,Lokesh
+E02,Bhupesh
+E03,Amit
+E04,Ratan
+E05,Dinesh
+E06,Pavan
+E07,Tejas
+E08,Sheela
+E09,Kumar
+E10,Venkat
+EmployeeSalary.csv
+E01,50000
+E02,50000
+E03,45000
+E04,45000
+E05,50000
+E06,45000
+E07,50000
+E08,10000
+E09,10000
+E10,10000
+
+Solution:
+
+Step 1 : Create all three files in hdfs in directory called sparkl (We will do using Hue}.
+However, you can first create in local filesystem and then
+Step 2 : Load EmployeeManager.csv file from hdfs and create PairRDDs
+val manager = sc.textFile("spark1/EmployeeManager.csv")
+val managerPairRDD = manager.map(x=> (x.split(",")(0),x.split(",")(1)))
+Step 3 : Load EmployeeName.csv file from hdfs and create PairRDDs
+val name = sc.textFile("spark1/EmployeeName.csv")
+val namePairRDD = name.map(x=> (x.split(",")(0),x.split('\")(1)))
+Step 4 : Load EmployeeSalary.csv file from hdfs and create PairRDDs
+val salary = sc.textFile("spark1/EmployeeSalary.csv")
+val salaryPairRDD = salary.map(x=> (x.split(",")(0),x.split(",")(1)))
+Step 4 : Join all pairRDDS
+val joined = namePairRDD.join(salaryPairRDD}.join(managerPairRDD}
+Step 5 : Now sort the joined results, val joinedData = joined.sortByKey()
+Step 6 : Now generate comma separated data.
+val finalData = joinedData.map(v=> (v._1, v._2._1._1, v._2._1._2, v._2._2))
+Step 7 : Save this output in hdfs as text file.
+finalData.saveAsTextFile("spark1/result.txt")
+
+
+
+Question 12:
+Problem Scenario: 
+
+You have been given following code snippet.
+
+val grouped = sc.parallelize(Seq(((1,"twoM), List((3,4), (5,6)))))
+val flattened = grouped.flatMap {A =>
+groupValues.map { value => B }
+}
+You need to generate following output.
+Hence replace A and B
+Array((1,two,3,4),(1,two,5,6))
+
+Solution:
+
+A case (key, groupValues)
+B (key._1, key._2, value._1, value._2)
+
+
+
+
+
+

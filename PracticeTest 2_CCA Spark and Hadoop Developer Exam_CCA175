@@ -1,0 +1,488 @@
+Question 1:
+Problem Scenario: 
+
+You have to run your Spark application on yarn with each executor
+Maximum heap size to be 512MB and Number of processor cores to allocate on each executor will be 1 and Your main application required three values as input arguments V1
+V2 V3.
+Please replace XXX, YYY, ZZZ
+./bin/spark-submit -class com.hadoopexam.MyTask --master yarn-cluster--num-executors 3
+--driver-memory 512m XXX YYY lib/hadoopexam.jarZZZ
+
+Solution:
+
+XXX: -executor-memory 512m YYY: -executor-cores 1
+ZZZ : V1 V2 V3
+Notes : spark-submit on yarn options Option Description
+archives Comma-separated list of archives to be extracted into the working directory of each executor. The path must be globally visible inside your cluster; see Advanced
+Dependency Management.
+executor-cores Number of processor cores to allocate on each executor. Alternatively, you can use the spark.executor.cores property, executor-memory Maximum heap size to allocate to each executor. Alternatively, you can use the spark.executor.memory-property.
+num-executors Total number of YARN containers to allocate for this application.
+Alternatively, you can use the spark.executor.instances property. queue YARN queue to submit to. For more information, see Assigning Applications and Queries to Resource
+Pools. Default: default.
+
+
+Question 2:
+Problem Scenario: 
+
+In Continuation of previous question, please accomplish following activities.
+
+1. Select all the columns from product table with output header as below. productID AS ID code AS Code name AS Description price AS 'Unit Price'
+2. Select code and name both separated by ' -' and header name should be Product
+Description'.
+3. Select all distinct prices.
+4 . Select distinct price and name combination.
+5 . Select all price data sorted by both code and productID combination.
+6 . count number of products.
+7 . Count number of products for each code.
+
+Solution:
+
+Step 1 : Select all the columns from product table with output header as below. productID
+AS ID code AS Code name AS Description price AS "Unit Price'
+val results = sqlContext.sql(......SELECT productID AS ID, code AS Code, name AS
+Description, price AS Unit Price' FROM products ORDER BY ID"""
+results.show()
+Step 2 : Select code and name both separated by ' -' and header name should be "Product
+Description.
+val results = sqlContext.sql(......SELECT CONCAT(code,' -', name) AS Product Description, price FROM products""" ) results.showQ
+Step 3 : Select all distinct prices.
+val results = sqlContext.sql(......SELECT DISTINCT price AS Distinct Price" FROM products......) results.show()
+Step 4 : Select distinct price and name combination.
+val results = sqlContext.sql(......SELECT DISTINCT price, name FROM products""" ) results. showQ
+Step 5 : Select all price data sorted by both code and productID combination.
+val results = sqlContext.sql('.....SELECT' FROM products ORDER BY code, productID'.....) results.show()
+Step 6 : count number of products.
+val results = sqlContext.sql(......SELECT COUNT(') AS 'Count' FROM products......) results.show()
+Step 7 : Count number of products for each code.
+val results = sqlContext.sql(......SELECT code, COUNT('} FROM products GROUP BY code......) results. showQ val results = sqlContext.sql(......SELECT code, COUNT('} AS count FROM products
+GROUP BY code ORDER BY count DESC......)
+results. showQ
+
+
+Question 3:
+Problem Scenario: 
+
+In Continuation of previous question, please accomplish following activities.
+
+1. Select all the records with quantity >= 5000 and name starts with 'Pen'
+2. Select all the records with quantity >= 5000, price is less than 1.24 and name starts with
+'Pen'
+3. Select all the records witch does not have quantity >= 5000 and name does not starts with 'Pen'
+4. Select all the products which name is 'Pen Red', 'Pen Black'
+5. Select all the products which has price BETWEEN 1.0 AND 2.0 AND quantity
+BETWEEN 1000 AND 2000.
+
+Solution:
+
+Step 1 : Select all the records with quantity >= 5000 and name starts with 'Pen' val results = sqlContext.sql(......SELECT * FROM products WHERE quantity >= 5000 AND name LIKE 'Pen %.......) results.show()
+Step 2 : Select all the records with quantity >= 5000 , price is less than 1.24 and name starts with 'Pen' val results = sqlContext.sql(......SELECT * FROM products WHERE quantity >= 5000 AND price < 1.24 AND name LIKE 'Pen %.......) results. showQ
+Step 3 : Select all the records witch does not have quantity >= 5000 and name does not starts with 'Pen' val results = sqlContext.sql('.....SELECT * FROM products WHERE NOT (quantity >= 5000
+AND name LIKE 'Pen %')......)
+results. showQ
+Step 4 : Select all the products wchich name is 'Pen Red', 'Pen Black'
+val results = sqlContext.sql('.....SELECT' FROM products WHERE name IN ('Pen Red',
+'Pen Black')......)
+results. showQ
+Step 5 : Select all the products which has price BETWEEN 1.0 AND 2.0 AND quantity
+BETWEEN 1000 AND 2000.
+val results = sqlContext.sql(......SELECT * FROM products WHERE (price BETWEEN 1.0
+AND 2.0) AND (quantity BETWEEN 1000 AND 2000)......)
+results. show()
+
+
+Question 4:
+Problem Scenario: 
+
+You have given a file named spark6/user.csv.
+
+Data is given below:
+user.csv
+id,topic,hits
+Rahul,scala,120
+Nikita,spark,80
+Mithun,spark,1
+myself,cca175,180
+Now write a Spark code in scala which will remove the header part and create RDD of values as below, for all rows. And also if id is myself" than filter out row.
+Map(id -> om, topic -> scala, hits -> 120)
+
+Solution:
+
+Step 1 : Create file in hdfs (We will do using Hue). However, you can first create in local filesystem and then upload it to hdfs.
+Step 2 : Load user.csv file from hdfs and create PairRDDs val csv =
+sc.textFile("spark6/user.csv")
+Step 3 : split and clean data
+val headerAndRows = csv.map(line => line.split(",").map(_.trim))
+Step 4 : Get header row
+val header = headerAndRows.first
+Step 5 : Filter out header (We need to check if the first val matches the first header name) val data = headerAndRows.filter(_(0) != header(O))
+Step 6 : Splits to map (header/value pairs)
+val maps = data.map(splits => header.zip(splits).toMap)
+step 7: Filter out the user "myself
+val result = maps.filter(map => mapf'id") != "myself")
+Step 8 : Save the output as a Text file. result.saveAsTextFile("spark6/result.txt")
+
+
+
+Question 5:
+Problem Scenario: 
+
+You have been given following mysql database details as well as other info.
+
+user=retail_dba
+password=cloudera
+database=retail_db
+jdbc URL = jdbc:mysql://quickstart:3306/retail_db
+Please accomplish following.
+1. Import department tables using your custom boundary query, which import departments between 1 to 25.
+2 . Also make sure each tables file is partitioned in 2 files e.g. part-00000, part-00002
+3 . Also make sure you have imported only two columns from table, which are department_id,department_name
+
+Solutions:
+
+Step 1 : Clean the hdfs tile system, if they exists clean out.
+hadoop fs -rm -R departments
+hadoop fs -rm -R categories
+hadoop fs -rm -R products
+hadoop fs -rm -R orders
+hadoop fs -rm -R order_itmes
+hadoop fs -rm -R customers
+Step 2 : Now import the department table as per requirement.
+sqoop import \
+-connect jdbc:mysql://quickstart:3306/retail_db \
+--username=retail_dba \
+-password=cloudera \
+-table departments \
+-target-dir /user/cloudera/departments \
+-m2\
+-boundary-query "select 1, 25 from departments" \
+-columns department_id,department_name
+Step 3 : Check imported data.
+hdfs dfs -Is departments
+hdfs dfs -cat departments/part-m-00000
+hdfs dfs -cat departments/part-m-00001
+
+
+Question 6:
+Problem Scenario: 
+
+You have been given below code snippet.
+
+val a = sc.parallelize(List("dog", "cat", "owl", "gnu", "ant"), 2)
+val b = sc.parallelize(1 to a.count.tolnt, 2)
+val c = a.zip(b)
+operation1
+Write a correct code snippet for operational which will produce desired output, shown below.
+Array[(String, Int)] = Array((owl,3), (gnu,4), (dog,1), (cat,2>, (ant,5))
+
+Solution: 
+
+c.sortByKey(false).collect
+sortByKey [Ordered] : This function sorts the input RDD's data and stores it in a new RDD.
+"The output RDD is a shuffled RDD because it stores data that is output by a reducer which has been shuffled. The implementation of this function is actually very clever.
+First, it uses a range partitioner to partition the data in ranges within the shuffled RDD.
+Then it sorts these ranges individually with mapPartitions using standard sort mechanisms.
+
+
+Question 7:
+Problem Scenario: 
+
+You have been given following mysql database details as well as other info.
+
+user=retail_dba
+password=cloudera
+database=retail_db
+jdbc URL = jdbc:mysql://quickstart:3306/retail_db
+Please accomplish following.
+1. Create a database named hadoopexam and then create a table named departments in it, with following fields. department_id int, department_name string e.g. location should be
+hdfs://quickstart.cloudera:8020/user/hive/warehouse/hadoopexam.db/departments
+2. Please import data in existing table created above from retaidb.departments into hive table hadoopexam.departments.
+3. Please import data in a non-existing table, means while importing create hive table named hadoopexam.departments_new
+
+Solution:
+
+Step 1 : Go to hive interface and create database.
+hive
+create database hadoopexam;
+Step 2. Use the database created in above step and then create table in it. use hadoopexam; show tables;
+Step 3 : Create table in it.
+create table departments (department_id int, department_name string);
+show tables;
+desc departments;
+desc formatted departments;
+Step 4 : Please check following directory must not exist else it will give error, hdfs dfs -Is
+/user/cloudera/departments
+If directory already exists, make sure it is not useful and than delete the same.
+This is the staging directory where Sqoop store the intermediate data before pushing in hive table.
+hadoop fs -rm -R departments
+Step 5 : Now import data in existing table
+sqoop import \
+-connect jdbc:mysql://quickstart:3306/retail_db \
+~ username=retail_dba \
+-password=cloudera \
+--table departments \
+-hive-home /user/hive/warehouse \
+-hive-import \
+-hive-overwrite \
+-hive-table hadoopexam.departments
+Step 6 : Check whether data has been loaded or not.
+hive;
+use hadoopexam;
+show tables;
+select" from departments;
+desc formatted departments;
+Step 7 : Import data in non-existing tables in hive and create table while importing.
+sqoop import \
+-connect jdbc:mysql://quickstart:3306/retail_db \
+--username=retail_dba \
+~ password=cloudera \
+-table departments \
+-hive-home /user/hive/warehouse \
+-hive-import \
+-hive-overwrite \
+-hive-table hadoopexam.departments_new \
+-create-hive-table
+Step 8 : Check-whether data has been loaded or not.
+hive;
+use hadoopexam;
+show tables;
+select" from departments_new;
+desc formatted departments_new;
+
+
+Question 8:
+Problem Scenario: 
+
+You have been given MySQL DB with following details.
+
+user=retail_dba
+password=cloudera
+database=retail_db
+table=retail_db.categories
+jdbc URL = jdbc:mysql://quickstart:3306/retail_db
+Please accomplish following activities.
+1. Import data from categories table, where category=22 (Data should be stored in categories subset)
+2. Import data from categories table, where category>22 (Data should be stored in categories_subset_2)
+3. Import data from categories table, where category between 1 and 22 (Data should be stored in categories_subset_3)
+4. While importing catagories data change the delimiter to '|' (Data should be stored in categories_subset_S)
+5. Importing data from catagories table and restrict the import to category_name,category id columns only with delimiter as '|'
+6 . Add null values in the table using below SQL statement ALTER TABLE categories modify category_department_id int(11); INSERT INTO categories values
+(eO.NULL.'TESTING');
+7. Importing data from catagories table (In categories_subset_17 directory) using '|' delimiter and categoryjd between 1 and 61 and encode null values for both string and non string columns.
+8. Import entire schema retail_db in a directory categories_subset_all_tables
+
+Solution:
+
+Step 1: Import Single table (Subset data} Note: Here the ' is the same you find on - key sqoop import --connect jdbc:mysql://quickstart:3306/retail_db --username=retail_dba - password=cloudera -table=categories ~warehouse-dir= categories_subset --where
+\'category_id\'=22 --m 1
+Step 2 : Check the output partition
+hdfs dfs -cat categoriessubset/categories/part-m-00000
+Step 3 : Change the selection criteria (Subset data)
+sqoop import --connect jdbc:mysql://quickstart:3306/retail_db --username=retail_dba - password=cloudera -table=categories ~warehouse-dir= categories_subset_2 --where
+\'category_id\'\>22 -m 1
+Step 4 : Check the output partition
+hdfs dfs -cat categories_subset_2/categories/part-m-00000
+Step 5 : Use between clause (Subset data)
+sqoop import --connect jdbc:mysql://quickstart:3306/retail_db --username=retail_dba - password=cloudera -table=categories ~warehouse-dir=categories_subset_3 --where
+"\'category_id\' between 1 and 22" --m 1
+Step 6 : Check the output partition
+hdfs dfs -cat categories_subset_3/categories/part-m-00000
+Step 7 : Changing the delimiter during import.
+sqoop import --connect jdbc:mysql://quickstart:3306/retail_db --username=retail dba - password=cloudera -table=categories -warehouse-dir=:categories_subset_6 --where
+"/'categoryjd /' between 1 and 22" -fields-terminated-by='|' -m 1
+Step 8 : Check the.output partition
+hdfs dfs -cat categories_subset_6/categories/part-m-00000
+Step 9 : Selecting subset columns
+sqoop import --connect jdbc:mysql://quickstart:3306/retail_db --username=retail_dba - password=cloudera -table=categories --warehouse-dir=categories subset col -where
+"/'category id/' between 1 and 22" -fields-terminated-by=T -columns=category name,category id --m 1
+Step 10 : Check the output partition
+hdfs dfs -cat categories_subset_col/categories/part-m-00000
+Step 11 : Inserting record with null values (Using mysql} ALTER TABLE categories modify category_department_id int(11); INSERT INTO categories values ^NULL/TESTING'); select" from categories;
+Step 12 : Encode non string null column
+sqoop import --connect jdbc:mysql://quickstart:3306/retail_db --username=retail dba - password=cloudera -table=categories --warehouse-dir=categortes_subset_17 -where
+"\"category_id\" between 1 and 61" -fields-terminated-by=,|' --null-string-N' -null-non- string=,N' --m 1
+Step 13 : View the content
+hdfs dfs -cat categories_subset_17/categories/part-m-00000
+Step 14 : Import all the tables from a schema (This step will take little time) sqoop import-all-tables -connect jdbc:mysql://quickstart:3306/retail_db -- username=retail_dba -password=cloudera -warehouse-dir=categories_si
+Step 15 : View the contents
+hdfs dfs -Is categories_subset_all_tables
+Step 16 : Cleanup or back to originals.
+delete from categories where categoryid in (59,60);
+ALTER TABLE categories modify category_department_id int(11) NOTNULL;
+ALTER TABLE categories modify category_name varchar(45) NOT NULL;
+desc categories;
+
+
+
+Question 9:
+Problem Scenario: 
+
+You have been given following mysql database details as well as other info.
+
+user=retail_dba
+password=cloudera
+database=retail_db
+jdbc URL = jdbc:mysql://quickstart:3306/retail_db
+Now accomplish following activities.
+1. Create mysql table as below.
+mysql --user=retail_dba -password=cloudera
+use retail_db
+CREATE TABLE IF NOT EXISTS departments_hive02(id int, department_name
+varchar(45), avg_salary int);
+show tables;
+2. Now export data from hive table departments_hive01 in departments_hive02. While exporting, please note following. wherever there is a empty string it should be loaded as a null value in mysql.
+wherever there is -999 value for int field, it should be created as null value.
+
+Solution:
+
+Step 1 : Create table in mysql db as well.
+mysql ~user=retail_dba -password=cloudera
+use retail_db
+CREATE TABLE IF NOT EXISTS departments_hive02(id int, department_name
+varchar(45), avg_salary int);
+show tables;
+Step 2 : Now export data from hive table to mysql table as per the requirement.
+sqoop export --connect jdbc:mysql://quickstart:3306/retail_db \
+-username retaildba \
+-password cloudera \
+--table departments_hive02 \
+-export-dir /user/hive/warehouse/departments_hive01 \
+-input-fields-terminated-by '\001' \
+--input-Iines-terminated-by '\n' \
+--num-mappers 1 \
+-batch \
+-Input-null-string "" \
+-input-null-non-string -999
+step 3 : Now validate the data,select * from departments_hive02;
+
+
+Question 10:
+Problem Scenario: 
+
+You have been given below code snippet.
+val a = sc.parallelize(List("dog", "salmon", "salmon", "rat", "elephant"}, 3} val b = a.keyBy(_.length) val c = sc.parallelize(List("dog","cat","gnu","salmon","rabbit","turkey","woif","bear","bee"), 3) val d = c.keyBy(_.length) operation1
+Write a correct code snippet for operationl which will produce desired output, shown below.
+Array[(lnt, (String, String))] = Array((6,(salmon,salmon)), (6,(salmon,rabbit)),
+(6,(salmon,turkey)), (6,(salmon,salmon)), (6,(salmon,rabbit)),
+(6,(salmon,turkey)), (3,(dog,dog)), (3,(dog,cat)), (3,(dog,gnu)), (3,(dog,bee)), (3,(rat,dog)),
+(3,(rat,cat)), (3,(rat,gnu)), (3,(rat,bee)))
+
+Solution:
+
+b.join(d).collect
+join [Pair]: Performs an inner join using two key-value RDDs. Please note that the keys must be generally comparable to make this work. keyBy : Constructs two-component tuples
+(key-value pairs) by applying a function on each data item. The result of the function becomes the data item becomes the key and the original value of the newly created tuples.
+
+
+Question 11:
+Problem Scenario: 
+
+You have been given MySQL DB with following details.
+
+user=retail_dba
+password=cloudera
+database=retail_db
+table=retail_db.orders
+table=retail_db.order_items
+jdbc URL = jdbc:mysql://quickstart:3306/retail_db
+Columns of order table : (orderid , order_date , order_customer_id, order_status)
+Columns of ordeMtems table : (order_item_id , order_item_order_ld ,
+order_item_product_id, order_item_quantity,order_item_subtotal,order_
+item_product_price)
+Please accomplish following activities.
+1. Copy "retail_db.orders" and "retail_db.order_items" table to hdfs in respective directory p92_orders and p92 order items .
+2 . Join these data using orderid in Spark and Python
+3 . Calculate total revenue perday and per order
+4. Calculate total and average revenue for each date. - combineByKey
+-aggregateByKey
+
+Solution:
+
+Step 1 : Import Single table .
+sqoop import --connect jdbc:mysql://quickstart:3306/retail_db -username=retail_dba - password=cloudera -table=orders --target-dir=p92_orders -m 1 sqoop import --connect jdbc:mysql://quickstart:3306/retail_db --username=retail_dba - password=cloudera -table=order_items --target-dir=p92_order_items -m1
+Note : Please check you dont have space between before or after '=' sign. Sqoop uses the
+MapReduce framework to copy data from RDBMS to hdfs
+Step 2 : Read the data from one of the partition, created using above command, hadoop fs
+-cat p92_orders/part-m-00000 hadoop fs -cat p92_order_items/part-m-00000
+Step 3 : Load these above two directory as RDD using Spark and Python (Open pyspark terminal and do following). orders = sc.textFile("p92_orders") orderltems = sc.textFile("p92_order_items")
+Step 4 : Convert RDD into key value as (orderjd as a key and rest of the values as a value)
+# First value is orderjd
+ordersKeyValue = orders.map(lambda line: (int(line.split(",")[0]), line))
+# Second value as an Orderjd
+orderltemsKeyValue = orderltems.map(lambda line: (int(line.split(",")[1]), line))
+Step 5 : Join both the RDD using orderjd
+joinedData = orderltemsKeyValue.join(ordersKeyValue)
+#print the joined data
+for line in joinedData.collect():
+print(line)
+Format of joinedData as below.
+[Orderld, 'All columns from orderltemsKeyValue', 'All columns from orders Key Value']
+Step 6 : Now fetch selected values Orderld, Order date and amount collected on this order.
+//Retruned row will contain ((order_date,order_id),amout_collected)
+revenuePerDayPerOrder = joinedData.map(lambda row: ((row[1][1].split(M,M)[1],row[0]}, float(row[1][0].split(",")[4])))
+#print the result
+for line in revenuePerDayPerOrder.collect():
+print(line)
+Step 7 : Now calculate total revenue perday and per order
+A. Using reduceByKey
+totalRevenuePerDayPerOrder = revenuePerDayPerOrder.reduceByKey(lambda
+runningSum, value: runningSum + value)
+for line in totalRevenuePerDayPerOrder.sortByKey().collect(): print(line)
+#Generate data as (date, amount_collected) (Ignore ordeMd)
+dateAndRevenueTuple = totalRevenuePerDayPerOrder.map(lambda line: (line[0][0], line[1])) for line in dateAndRevenueTuple.sortByKey().collect(): print(line)
+Step 8 : Calculate total amount collected for each day. And also calculate number of days.
+# Generate output as (Date, Total Revenue for date, total_number_of_dates)
+# Line 1 : it will generate tuple (revenue, 1)
+# Line 2 : Here, we will do summation for all revenues at the same time another counter to maintain number of records.
+#Line 3 : Final function to merge all the combiner
+totalRevenueAndTotalCount = dateAndRevenueTuple.combineByKey( \
+lambda revenue: (revenue, 1), \
+lambda revenueSumTuple, amount: (revenueSumTuple[0] + amount, revenueSumTuple[1]
++ 1), \
+lambda tuplel, tuple2: (round(tuple1[0] + tuple2[0], 2}, tuple1[1] + tuple2[1]) \ for line in totalRevenueAndTotalCount.collect(): print(line)
+Step 9 : Now calculate average for each date
+averageRevenuePerDate = totalRevenueAndTotalCount.map(lambda threeElements:
+(threeElements[0], threeElements[1][0]/threeElements[1][1]}}
+for line in averageRevenuePerDate.collect(): print(line)
+Step 10 : Using aggregateByKey
+#line 1 : (Initialize both the value, revenue and count)
+#line 2 : runningRevenueSumTuple (Its a tuple for total revenue and total record count for each date)
+# line 3 : Summing all partitions revenue and count
+totalRevenueAndTotalCount = dateAndRevenueTuple.aggregateByKey( \
+(0,0), \
+lambda runningRevenueSumTuple, revenue: (runningRevenueSumTuple[0] + revenue, runningRevenueSumTuple[1] + 1), \ lambda tupleOneRevenueAndCount, tupleTwoRevenueAndCount:
+(tupleOneRevenueAndCount[0] + tupleTwoRevenueAndCount[0],
+tupleOneRevenueAndCount[1] + tupleTwoRevenueAndCount[1]) \
+)
+for line in totalRevenueAndTotalCount.collect(): print(line)
+Step 11 : Calculate the average revenue per date
+averageRevenuePerDate = totalRevenueAndTotalCount.map(lambda threeElements:
+(threeElements[0], threeElements[1][0]/threeElements[1][1]))
+for line in averageRevenuePerDate.collect(): print(line)
+
+
+
+Question 12:
+Problem Scenario: 
+
+You have been given sample data as below in a file called spark15/file1.txt
+
+3070811,1963,1096,,"US","CA",,1,
+3022811,1963,1096,,"US","CA",,1,56
+3033811,1963,1096,,"US","CA",,1,23
+Below is the code snippet to process this tile.
+val field= sc.textFile("spark15/f ilel.txt")
+val mapper = field.map(x=> A)
+mapper.map(x => x.map(x=> {B})).collect
+Please fill in A and B so it can generate below final output
+Array(Array(3070811,1963,109G, 0, "US", "CA", 0,1, 0)
+,Array(3022811,1963,1096, 0, "US", "CA", 0,1, 56)
+,Array(3033811,1963,1096, 0, "US", "CA", 0,1, 23)
+)
+
+Solution:
+
+A. x.split(","-1)
+B. if (x. isEmpty) 0 else x
+
+
+

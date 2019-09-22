@@ -1,0 +1,490 @@
+Question 1:
+Problem Scenario: 
+
+You have been given following mysql database details as well as other info.
+
+user=retail_dba
+password=cloudera
+database=retail_db
+jdbc URL = jdbc:mysql://quickstart:3306/retail_db
+
+Please accomplish following.
+1. Create a table in retailedb with following definition.
+CREATE table departments_new (department_id int(11), department_name varchar(45), created_date T1MESTAMP DEFAULT NOW());
+2 . Now isert records from departments table to departments_new
+3 . Now import data from departments_new table to hdfs.
+4 . Insert following 5 records in departmentsnew table. Insert into departments_new values(110, "Civil" , null); Insert into departments_new values(111, "Mechanical" , null);
+Insert into departments_new values(112, "Automobile" , null); Insert into departments_new values(113, "Pharma" , null);
+Insert into departments_new values(114, "Social Engineering" , null);
+5. Now do the incremental import based on created_date column.
+
+Solution:
+
+Step 1 : Login to musql db
+mysql --user=retail_dba -password=cloudera
+show databases;
+use retail db; show tables;
+Step 2 : Create a table as given in problem statement.
+CREATE table departments_new (department_id int(11), department_name varchar(45), createddate T1MESTAMP DEFAULT NOW()); show tables;
+Step 3 : isert records from departments table to departments_new insert into departments_new select a.", null from departments a;
+Step 4 : Import data from departments new table to hdfs.
+sqoop import \
+-connect jdbc:mysql://quickstart:330G/retail_db \
+~ username=retail_dba \
+-password=cloudera \
+-table departments_new\
+--target-dir /user/cloudera/departments_new \
+--split-by departments
+Stpe 5 : Check the imported data.
+hdfs dfs -cat /user/cloudera/departmentsnew/part"
+Step 6 : Insert following 5 records in departmentsnew table.
+Insert into departments_new values(110, "Civil" , null);
+Insert into departments_new values(111, "Mechanical" , null);
+Insert into departments_new values(112, "Automobile" , null);
+Insert into departments_new values(113, "Pharma" , null);
+Insert into departments_new values(114, "Social Engineering" , null);
+commit;
+Stpe 7 : Import incremetal data based on created_date column.
+sqoop import \
+-connect jdbc:mysql://quickstart:330G/retaiI_db \
+-username=retail_dba \
+-password=cloudera \
+--table departments_new\
+-target-dir /user/cloudera/departments_new \
+-append \
+-check-column created_date \
+-incremental lastmodified \
+-split-by departments \
+-last-value "2016-01-30 12:07:37.0"
+Step 8 : Check the imported value.
+hdfs dfs -cat /user/cloudera/departmentsnew/part"
+
+
+Question 2:
+Problem Scenario:
+
+There is a parent organization called "ABC Group Inc", which has two child companies named Tech Inc and MPTech.
+Both companies employee information is given in two separate text file as below. Please do the following activity for employee details.
+Tech Inc.txt
+1,Alok,Hyderabad
+2,Krish,Hongkong
+3,Jyoti,Mumbai
+4 ,Atul,Banglore
+5 ,Ishan,Gurgaon
+MPTech.txt
+6 ,John,Newyork
+7 ,alp2004,California
+8 ,tellme,Mumbai
+9 ,Gagan21,Pune
+1 0,Mukesh,Chennai
+1 . Which command will you use to check all the available command line options on HDFS and How will you get the Help for individual command.
+2. Create a new Empty Directory named Employee using Command line. And also create an empty file named in it Techinc.txt
+3. Load both companies Employee data in Employee directory (How to override existing file in HDFS).
+4. Merge both the Employees data in a Single tile called MergedEmployee.txt, merged tiles should have new line character at the end of each file content.
+5. Upload merged file on HDFS and change the file permission on HDFS merged file, so that owner and group member can read and write, other user can read the file.
+6. Write a command to export the individual file as well as entire directory from HDFS to local file System.
+
+Solution:
+
+Step 1 : Check All Available command hdfs dfs
+Step 2 : Get help on Individual command hdfs dfs -help get
+Step 3 : Create a directory in HDFS using named Employee and create a Dummy file in it called e.g. Techinc.txt hdfs dfs -mkdir Employee
+Now create an emplty file in Employee directory using Hue.
+Step 4 : Create a directory on Local file System and then Create two files, with the given data in problems.
+Step 5 : Now we have an existing directory with content in it, now using HDFS command line , overrid this existing Employee directory. While copying these files from local file
+System to HDFS. cd /home/cloudera/Desktop/ hdfs dfs -put -f Employee
+Step 6 : Check All files in directory copied successfully hdfs dfs -Is Employee
+Step 7 : Now merge all the files in Employee directory, hdfs dfs -getmerge -nl Employee
+MergedEmployee.txt
+Step 8 : Check the content of the file. cat MergedEmployee.txt
+Step 9 : Copy merged file in Employeed directory from local file ssytem to HDFS. hdfs dfs - put MergedEmployee.txt Employee/
+Step 10 : Check file copied or not. hdfs dfs -Is Employee
+Step 11 : Change the permission of the merged file on HDFS hdfs dfs -chmpd 664
+Employee/MergedEmployee.txt
+Step 12 : Get the file from HDFS to local file system, hdfs dfs -get Employee
+Employee_hdfs
+
+
+Question 3:
+Problem Scenario: 
+
+You have been given MySQL DB with following details.
+
+user=retail_dba
+password=cloudera
+database=retail_db
+table=retail_db.categories
+jdbc URL = jdbc:mysql://quickstart:3306/retail_db
+Please accomplish following activities.
+1. Write a Sqoop Job which will import "retaildb.categories" table to hdfs, in a directory name "categories_targetJob".
+
+Solution:
+
+Step 1 : Connecting to existing MySQL Database mysql -user=retail_dba -- password=cloudera retail_db
+Step 2 : Show all the available tables show tables;
+Step 3 : Below is the command to create Sqoop Job (Please note that - import space is mandatory) 
+
+sqoop job -create sqoopjob \ -- import \
+-connect "jdbc:mysql://quickstart:3306/retail_db" \
+-username=retail_dba \
+-password=cloudera \
+-table categories \
+-target-dir categories_targetJob \
+-fields-terminated-by '|' \
+-lines-terminated-by '\n'
+Step 4 : List all the Sqoop Jobs sqoop job --list
+Step 5 : Show details of the Sqoop Job sqoop job --show sqoopjob
+Step 6 : Execute the sqoopjob sqoopjob --exec sqoopjob
+Step 7 : Check the output of import job
+hdfs dfs -Is categories_target_job
+hdfs dfs -cat categories_target_job/part*
+
+
+
+
+Question 4:
+Problem Scenario: 
+
+You have been given below code snippet (calculating an average score}, with intermediate output.
+type ScoreCollector = (Int, Double)
+type PersonScores = (String, (Int, Double))
+val initialScores = Array(("Fred", 88.0), ("Fred", 95.0), ("Fred", 91.0), ("Wilma", 93.0),
+("Wilma", 95.0), ("Wilma", 98.0))
+val wilmaAndFredScores = sc.parallelize(initialScores).cache()
+val scores = wilmaAndFredScores.combineByKey(createScoreCombiner, scoreCombiner, scoreMerger) val averagingFunction = (personScore: PersonScores) => { val (name, (numberScores, totalScore)) = personScore (name, totalScore / numberScores)
+}
+val averageScores = scores.collectAsMap(}.map(averagingFunction)
+Expected output: averageScores: scala.collection.Map[String,Double] = Map(Fred ->
+91.33333333333333, Wilma -> 95.33333333333333)
+Define all three required function , which are input for combineByKey method, e.g.
+(createScoreCombiner, scoreCombiner, scoreMerger). And help us producing required results.
+
+Solution:
+
+val createScoreCombiner = (score: Double) => (1, score)
+val scoreCombiner = (collector: ScoreCollector, score: Double) => {
+val (numberScores. totalScore) = collector (numberScores + 1, totalScore + score)
+}
+val scoreMerger= (collector-!: ScoreCollector, collector2: ScoreCollector) => { val
+(numScoresl. totalScorel) = collector! val (numScores2, tota!Score2) = collector
+(numScoresl + numScores2, totalScorel + totalScore2)
+}
+
+
+
+Question 5:
+Problem Scenario: 
+
+You have been given 2 files , with the content as given Below
+(spark12/technology.txt)
+(spark12/salary.txt)
+(spark12/technology.txt)
+first,last,technology
+Amit,Jain,java
+Lokesh,kumar,unix
+Mithun,kale,spark
+Rajni,vekat,hadoop
+Rahul,Yadav,scala
+(spark12/salary.txt)
+first,last,salary
+Amit,Jain,100000
+Lokesh,kumar,95000
+Mithun,kale,150000
+Rajni,vekat,154000
+Rahul,Yadav,120000
+Write a Spark program, which will join the data based on first and last name and save the joined results in following format, first Last.technology.salary
+
+Solution:
+
+Step 1 : Create 2 files first using Hue in hdfs.
+Step 2 : Load all file as an RDD
+val technology = sc.textFile(Msparkl2/technology.txt").map(e => e.splitf',")) val salary = sc.textFile("spark12/salary.txt").map(e => e.split("."))
+Step 3 : Now create Key.value pair of data and join them.
+val joined = technology.map(e=>((e(0),e(1)),e(2))).join(salary.map(e=>((e(0),e(1)),e(2))))
+Step 4 : Save the results in a text file as below.
+joined.repartition(1).saveAsTextFile("spark12/multiColumn Joined.txt")
+
+
+
+Question 6:
+Problem Scenario: 
+
+You have been given data in json format as below.
+
+{"first_name":"Ankit", "last_name":"Jain"}
+{"first_name":"Amir", "last_name":"Khan"}
+{"first_name":"Rajesh", "last_name":"Khanna"}
+{"first_name":"Priynka", "last_name":"Chopra"}
+{"first_name":"Kareena", "last_name":"Kapoor"}
+{"first_name":"Lokesh", "last_name":"Yadav"}
+Do the following activity
+1 . create employee.json file locally.
+2 . Load this file on hdfs
+3 . Register this data as a temp table in Spark using Python.
+4 . Write select query and print this data.
+5 . Now save back this selected data in json format.
+
+Solution:
+
+Step 1 : create employee.json tile locally.
+vi employee.json (press insert) past the content.
+Step 2 : Upload this tile to hdfs, default location hadoop fs -put employee.json
+Step 3 : Write spark script
+#lmport SQLContext
+from pyspark import SQLContext
+# Create instance of SQLContext sqIContext = SQLContext(sc)
+# Load json file
+employee = sqlContext.jsonFile("employee.json")
+# Register RDD as a temp table employee.registerTempTablef'EmployeeTab"}
+# Select data from Employee table
+employeelnfo = sqlContext.sql("select * from EmployeeTab"}
+#lterate data and print
+for row in employeelnfo.collect():
+print(row)
+Step 4 : Write dataas a Text file employeelnfo.toJSON().saveAsTextFile("employeeJson1")
+Step 5: Check whether data has been created or not hadoop fs -cat employeeJsonl/part"
+
+
+
+Question 7:
+Problem Scenario: 
+
+You have been given a spark scala application, which is bundled in jar named hadoopexam.jar.
+
+Your application class name is com.hadoopexam.MyTask
+You want that while submitting your application should launch a driver on one of the cluster node.
+Please complete the following command to submit the application.
+spark-submit XXX -master yarn \
+YYY SSPARK HOME/lib/hadoopexam.jar 10
+
+Solution:
+
+XXX: -class com.hadoopexam.MyTask
+YYY : --deploy-mode cluster
+
+
+
+Question 8:
+Problem Scenario: 
+
+You have given a files as below.
+
+spark5/EmployeeName.csv (id,name)
+spark5/EmployeeSalary.csv (id,salary)
+Data is given below:
+EmployeeName.csv
+E01,Lokesh
+E02,Bhupesh
+E03,Amit
+E04,Ratan
+E05,Dinesh
+E06,Pavan
+E07,Tejas
+E08,Sheela
+E09,Kumar
+E10,Venkat
+EmployeeSalary.csv
+E01,50000
+E02,50000
+E03,45000
+E04,45000
+E05,50000
+E06,45000
+E07,50000
+E08,10000
+E09,10000
+E10,10000
+Now write a Spark code in scala which will load these two tiles from hdfs and join the same, and produce the (name.salary) values.
+And save the data in multiple tile group by salary (Means each file will have name of employees with same salary). Make sure file name include salary as well.
+
+Solution:
+
+Step 1 : Create all three files in hdfs (We will do using Hue). However, you can first create in local filesystem and then upload it to hdfs.
+Step 2 : Load EmployeeName.csv file from hdfs and create PairRDDs
+val name = sc.textFile("spark5/EmployeeName.csv")
+val namePairRDD = name.map(x=> (x.split(",")(0),x.split('V')(1)))
+Step 3 : Load EmployeeSalary.csv file from hdfs and create PairRDDs
+val salary = sc.textFile("spark5/EmployeeSalary.csv")
+val salaryPairRDD = salary.map(x=> (x.split(",")(0),x.split(",")(1)))
+Step 4 : Join all pairRDDS
+val joined = namePairRDD.join(salaryPairRDD}
+Step 5 : Remove key from RDD and Salary as a Key. val keyRemoved = joined.values
+Step 6 : Now swap filtered RDD.
+val swapped = keyRemoved.map(item => item.swap)
+Step 7 : Now groupBy keys (It will generate key and value array) val grpByKey = swapped.groupByKey().collect()
+Step 8 : Now create RDD for values collection
+val rddByKey = grpByKey.map{case (k,v) => k->sc.makeRDD(v.toSeq)}
+Step 9 : Save the output as a Text file.
+rddByKey.foreach{ case (k,rdd) => rdd.saveAsTextFile("spark5/Employee"+k)}
+
+
+
+Question 9:
+Problem Scenario: 
+
+You have been given below code snippet.
+val a = sc.parallelize(List("dog", "tiger", "lion", "cat", "spider", "eagle"), 2) val b = a.keyBy(_.length) val c = sc.parallelize(List("ant", "falcon", "squid"), 2) val d = c.keyBy(.length)
+operation 1
+Write a correct code snippet for operationl which will produce desired output, shown below.
+Array[(lnt, String)] = Array((4,lion))
+
+Solution:
+
+b.subtractByKey(d).collect
+subtractByKey [Pair] : Very similar to subtract, but instead of supplying a function, the key- component of each pair will be automatically used as criterion for removing items from the first RDD.
+
+
+
+Question 10:
+Problem Scenario: 
+
+You have been given following mysql database details as well as other info.
+user=retail_dba
+password=cloudera
+database=retail_db
+jdbc URL = jdbc:mysql://quickstart:3306/retail_db
+Compression Codec : org.apache.hadoop.io.compress.SnappyCodec
+Please accomplish following.
+1. Import entire database such that it can be used as a hive tables, it must be created in default schema.
+2. Also make sure each tables file is partitioned in 3 files e.g. part-00000, part-00002, part-00003
+3. Store all the Java files in a directory called java_output to evaluate the further
+
+Solution:
+
+Step 1 : Drop all the tables, which we have created in previous problems. Before implementing the solution.
+Login to hive and execute following command.
+show tables;
+drop table categories;
+drop table customers;
+drop table departments;
+drop table employee;
+drop table ordeMtems;
+drop table orders;
+drop table products;
+show tables;
+Check warehouse directory. hdfs dfs -Is /user/hive/warehouse
+Step 2 : Now we have cleaned database. Import entire retail db with all the required parameters as problem statement is asking.
+sqoop import-all-tables \
+-m3\
+-connect jdbc:mysql://quickstart:3306/retail_db \
+--username=retail_dba \
+-password=cloudera \
+-hive-import \
+--hive-overwrite \
+-create-hive-table \
+--compress \
+--compression-codec org.apache.hadoop.io.compress.SnappyCodec \
+--outdir java_output
+Step 3 : Verify the work is accomplished or not.
+a. Go to hive and check all the tables hive
+show tables;
+select count(1) from customers;
+b. Check the-warehouse directory and number of partitions,
+hdfs dfs -Is /user/hive/warehouse
+hdfs dfs -Is /user/hive/warehouse/categories
+c. Check the output Java directory.
+Is -Itr java_output/
+
+
+
+Question 11:
+Problem Scenario: 
+
+You have been given MySQL DB with following details.
+
+user=retail_dba
+password=cloudera
+database=retail_db
+table=retail_db.orders
+table=retail_db.order_items
+jdbc URL = jdbc:mysql://quickstart:3306/retail_db
+Please accomplish following activities.
+1. Copy "retail_db.order_items" table to hdfs in respective directory p90_order_items .
+2. Do the summation of entire revenue in this table using pyspark.
+3. Find the maximum and minimum revenue as well.
+4. Calculate average revenue
+Columns of ordeMtems table : (order_item_id , order_item_order_id ,
+order_item_product_id, order_item_quantity,order_item_subtotal,order_
+item_subtotal,order_item_product_price)
+
+Solution:
+
+Step 1 : Import Single table .
+sqoop import --connect jdbc:mysql://quickstart:3306/retail_db -username=retail_dba - password=cloudera -table=order_items --target -dir=p90 ordeMtems --m 1
+Note : Please check you dont have space between before or after '=' sign. Sqoop uses the
+MapReduce framework to copy data from RDBMS to hdfs
+Step 2 : Read the data from one of the partition, created using above command. hadoop fs
+-cat p90_order_items/part-m-00000
+Step 3 : In pyspark, get the total revenue across all days and orders. entire TableRDD = sc.textFile("p90_order_items")
+#Cast string to float
+extractedRevenueColumn = entireTableRDD.map(lambda line: float(line.split(",")[4]))
+Step 4 : Verify extracted data
+for revenue in extractedRevenueColumn.collect():
+print revenue
+#use reduce'function to sum a single column vale
+totalRevenue = extractedRevenueColumn.reduce(lambda a, b: a + b)
+Step 5 : Calculate the maximum revenue
+maximumRevenue = extractedRevenueColumn.reduce(lambda a, b: (a if a>=b else b))
+Step 6 : Calculate the minimum revenue
+minimumRevenue = extractedRevenueColumn.reduce(lambda a, b: (a if a<=b else b))
+Step 7 : Caclculate average revenue
+count=extractedRevenueColumn.count()
+averageRev=totalRevenue/count
+
+
+
+Question 12:
+Problem Scenario: 
+
+You have been given below three files
+product.csv (Create this file in hdfs)
+productID,productCode,name,quantity,price,supplierid
+1001,PEN,Pen Red,5000,1.23,501
+1002,PEN,Pen Blue,8000,1.25,501
+1003,PEN,Pen Black,2000,1.25,501
+1004,PEC,Pencil 2B,10000,0.48,502
+1005,PEC,Pencil 2H,8000,0.49,502
+1006,PEC,Pencil HB,0,9999.99,502
+2001,PEC,Pencil 3B,500,0.52,501
+2002,PEC,Pencil 4B,200,0.62,501
+2003,PEC,Pencil 5B,100,0.73,501
+2004,PEC,Pencil 6B,500,0.47,502
+supplier.csv
+supplierid,name,phone
+501,ABC Traders,88881111
+502,XYZ Company,88882222
+503,QQ Corp,88883333
+products_suppliers.csv
+productID,supplierID
+2001,501
+2002,501
+2003,501
+2004,502
+2001,503
+Now accomplish all the queries given in solution.
+1. It is possible that, same product can be supplied by multiple supplier. Now find each product, its price according to each supplier.
+2. Find all the supllier name, who are supplying 'Pencil 3B'
+3. Find all the products , which are supplied by ABC Traders.
+
+Solution:
+Step 1 : It is possible that, same product can be supplied by multiple supplier. Now find each product, its price according to each supplier.
+val results = sqlContext.sql(......SELECT products.name AS Product Name', price, suppliers.name AS Supplier Name'
+FROM products_suppliers
+JOIN products ON products_suppliers.productlD = products.productID JOIN suppliers ON products_suppliers.supplierlD = suppliers.supplierlD null t results.show()
+Step 2 : Find all the supllier name, who are supplying 'Pencil 3B'
+val results = sqlContext.sql(......SELECT p.name AS 'Product Name", s.name AS "Supplier
+Name'
+FROM products_suppliers AS ps
+JOIN products AS p ON ps.productID = p.productID
+JOIN suppliers AS s ON ps.supplierlD = s.supplierlD
+WHERE p.name = 'Pencil 3B"",M )
+results.show()
+Step 3 : Find all the products , which are supplied by ABC Traders.
+val results = sqlContext.sql(......SELECT p.name AS 'Product Name", s.name AS "Supplier
+Name'
+FROM products AS p, products_suppliers AS ps, suppliers AS s WHERE p.productID = ps.productID AND ps.supplierlD = s.supplierlD
+AND s.name = 'ABC Traders".....)
+results. show()
+
+
+
