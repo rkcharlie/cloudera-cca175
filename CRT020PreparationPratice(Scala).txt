@@ -1,0 +1,174 @@
+--------------------*****CRT020PreparationPratice(Scala)*****---------------------------------------------
+
+/*
+* CRT020 - Preparation - CRT020: Databricks Certified Associate Developer for Apache Spark 2.4 with Scala 2.11 – Assessment
+*/
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types._
+import org.apache.spark.sql.SaveMode
+import org.apache.spark.storage.StorageLevel
+
+//Spark context internal properties
+val sc = spark.sparkContext;
+println(sc.defaultParallelism)
+println(sc.deployMode)
+
+//Spark configuration manipulation
+spark.conf.set("spark.sql.shuffle.partitions","4")
+
+//Dataframe creation from Seq
+import spark.implicits._
+val studentSeq = Seq(1,2,3,4)
+val stuDF = studentSeq.toDF
+stuDF.show()
+
+val stuDS = studentSeq.toDS
+stuDS.show()
+
+//Dataset creation from range
+val range = 0 to 100
+val numDS = range.toDS
+numDS.agg(sum(col("value")).as("sum")).show()
+
+spark.range(20).toDF.show
+
+// UDF registration example
+def add(first:Int,second:Int):Int={
+  first+second
+}
+spark.udf.register("add",add(_:Int,_:Int))
+val numDF = range.toDF
+numDF.createOrReplaceTempView("numbers")
+spark.sql("select add(value,value) as double from numbers").show()
+
+//Read data for the “core” data formats (CSV, JSON, JDBC, ORC, Parquet, text and tables)
+spark.read.option("delimiter",":").csv("/FileStore/tables/movies.dat").show()
+//spark.read.json()
+//spark.read.jdbc()
+//spark.read.orc()
+//spark.read.parquet()
+spark.read.text("/FileStore/tables/movies.dat").show()
+spark.read.table("numbers").show()
+
+//How to configure options for specific formats
+//How to read data from non-core formats using format() and load()
+spark.read.option("delimiter",":").format("csv").load("/FileStore/tables/movies.dat").show()
+
+//How to specify a DDL-formatted schema
+spark.read.option("delimiter",":").schema("id STRING, dummy STRING, title STRING, dummy1 STRING, genere STRING").csv("/FileStore/tables/movies.dat").show()
+
+//How to construct and specify a schema using the StructType classes
+
+val schema = StructType(StructField("id1",StringType,true)::
+                           StructField("dummy1",StringType,true)::
+                           StructField("title1",StringType,true)::
+                           StructField("dummy11",StringType,true)::
+                           StructField("genere1",StringType,true)::
+                           Nil)
+val moviesSeq = Seq(Row("1",null,"Toy Story (1995)",null,"Animation"),Row("2",null,"MI",null,"Action"),Row("1",null,"Toy Story (1995)",null,"Children"))
+val moviesDF = spark.createDataFrame(spark.sparkContext.parallelize(moviesSeq),schema)
+
+//Write data to the “core” data formats (csv, json, jdbc, orc, parquet, text and tables)
+moviesDF.write.mode(SaveMode.Overwrite).csv("/FileStore/tables/movies.csv")
+moviesDF.write.mode(SaveMode.Overwrite).json("/FileStore/tables/movies.json")
+moviesDF.write.mode(SaveMode.Overwrite).orc("/FileStore/tables/movies.orc")
+moviesDF.write.mode(SaveMode.Overwrite).parquet("/FileStore/tables/movies.parquet")
+moviesDF.select(col("id1")).write.mode(SaveMode.Overwrite).text("/FileStore/tables/movies.txt")
+moviesDF.write.mode(SaveMode.Overwrite).saveAsTable("movies")
+//Overwriting existing files - see above
+
+//How to write a data source to 1 single file or N separate files
+moviesDF.repartition(10).write.mode(SaveMode.Overwrite).csv("/FileStore/tables/movies.csv")
+
+//How to write partitioned data
+//How to bucket data by a given set of columns
+moviesDF.write.partitionBy("title1").bucketBy(2,"id1").sortBy("id1").mode(SaveMode.Overwrite).saveAsTable("movies_new")
+
+//Have a working understanding of every action such as take(), collect(), and foreach()
+moviesDF.take(2)
+
+moviesDF.collect().foreach(println)
+
+moviesDF.foreach{x => x.toString}
+//Have a working understanding of the various transformations and how they work such as producing a distinct set, filtering data, repartitioning and coalescing, performing joins and unions as well as producing aggregates
+
+//Know how to cache data, specifically to disk, memory or both
+moviesDF.cache
+moviesDF.persist(StorageLevel.MEMORY_ONLY)
+moviesDF.persist(StorageLevel.DISK_ONLY)
+moviesDF.persist(StorageLevel.MEMORY_AND_DISK)
+moviesDF.persist(StorageLevel.MEMORY_AND_DISK_SER)
+
+//Know how to uncache previously cached data
+spark.catalog.uncacheTable("movies")
+moviesDF.unpersist
+
+//Converting a DataFrame to a global or temp view.
+moviesDF.createOrReplaceGlobalTempView("movies_global")
+moviesDF.createOrReplaceTempView("movies_view")
+
+//Know how to uncache previously cached data
+val moviesDF2 = moviesDF.withColumn("desc",lit("movies information"))
+
+//Applying hints
+moviesDF.join(broadcast(moviesDF2),Seq("id1"),"left").show()
+
+//Spark SQL Functions
+//TBD
+//Aggregate functions: getting the first or last item from an array or computing the min and max values of a column.
+val mvAggDF = moviesDF.groupBy(col("id1")).agg(collect_list("genere1").as("gen_list"))
+mvAggDF.select(col("gen_list")(0),col("gen_list")(size(col("gen_list"))-1)).show
+
+//Collection functions: testing if an array contains a value, exploding or flattening data.
+mvAggDF.select(array_contains(col("gen_list"),"Animation")).show
+mvAggDF.select(explode($"gen_list")).show
+
+//Date time functions: parsing strings into timestamps or formatting timestamps into strings
+moviesDF.withColumn("currTS", current_timestamp()).withColumn("currDT",date_format(col("currTS"),"yyyy-MM-dd")).show
+
+//Math functions: computing the cosign, floor or log of a number
+numDF.select(cos($"value"),floor($"value"),log($"value")).show
+
+//Misc functions: converting a value to crc32, md5, sha1 or sha2
+numDF.select(md5(encode($"value","UTF-8"))).show
+
+//Non-aggregate functions: creating an array, testing if a column is null, not-null, nan, etc
+numDF.select(isnull($"value")).show()
+
+//Sorting functions: sorting data in descending order, ascending order, and sorting with proper null handling
+numDF.sort(desc("value")).show()
+
+//String functions: applying a provided regular expression, trimming string and extracting substrings.
+moviesDF.select(substring($"genere1",0,3)).show()
+
+//UDF functions: employing a UDF function.
+def square(value:Int):Int={value*value}
+val squareUdf= udf(square(_:Int))
+numDF.select(squareUdf($"value")).show
+
+import org.apache.spark.sql.expressions._
+//Window functions: computing the rank or dense rank.
+val w = Window.orderBy("id1")
+moviesDF.select(rank().over(w).as("rank")).show()
+
+8
+client
++-----+
+|value|
++-----+
+|    1|
+|    2|
+|    3|
+|    4|
++-----+
+
++-----+
+|value|
++-----+
+|    1|
+|    2|
+|    3|
+|    4|
++-----+
+
++----+
